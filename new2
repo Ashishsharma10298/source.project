@@ -1,0 +1,117 @@
+// C++ pgroram for connecting to database (and error handling) 
+#include<stdio.h> 
+#include<SQLAPI.h>         // main SQLAPI++ header 
+  
+int main(int argc, char* argv[]) 
+{ 
+    // create connection object to connect to database 
+    SAConnection con; 
+    try
+    { 
+        // connect to database 
+        // in this example, it is Oracle, 
+        // but can also be Sybase, Informix, DB2 
+        // SQLServer, InterBase, SQLBase and ODBC 
+        con.Connect ("test",    // database name 
+                     "tester",  // user name 
+                     "tester",  // password 
+                     SA_Oracle_Client); //Oracle Client 
+        printf("We are connected!\n"); 
+  
+        // Disconnect is optional 
+        // autodisconnect will occur in destructor if needed 
+        con.Disconnect(); 
+        printf("We are disconnected!\n"); 
+    } 
+  
+    catch(SAException & x) 
+    { 
+        // SAConnection::Rollback() 
+        // can also throw an exception 
+        // (if a network error for example), 
+        // we will be ready 
+        try
+        { 
+            // on error rollback changes 
+            con.Rollback (); 
+        } 
+        catch(SAException &) 
+        { 
+        } 
+        // print error message 
+        printf("%s\n", (const char*)x.ErrText()); 
+    } 
+    return 0; 
+} 
+Run on IDE
+
+Output:
+
+We are Connected!
+We are Disconnected!
+ 
+
+Executing a simple SQL Command
+Now, we will look out to execute a simple SQL query.Firstly, creating a table for the database:
+create table tb1(id number, name varchar(20);
+
+Now, establish the connection to the database then, after your con.connect; method you should use cmd.setCommandText method to pass the query to the database, it is as shown below:
+
+con.Connect("test", "tester", "tester", SA_Oracle_Client);
+cmd.setCommandText("create table tb1(id number, name varchar(20));”);
+and now, to execute the query we have to use the following command:
+
+cmd.Execute();
+
+Full Code:
+
+#include<stdio.h> 
+#include <SQLAPI.h> // main SQLAPI++ header 
+int main(int argc, char* argv[]) 
+{ 
+    SAConnection con; // connection object to connect to database 
+    SACommandcmd;    // create command object 
+    try
+    { 
+        // connect to database (Oracle in our example) 
+        con.Connect("test", "tester", "tester", SA_Oracle_Client); 
+  
+        // associate a command with connection 
+        // connection can also be specified in SACommand constructor 
+        cmd.setConnection(&con); 
+  
+        // create table 
+        cmd.setCommandText("create table tbl(id number, name varchar(20));"); 
+        cmd.Execute(); 
+  
+        // insert value 
+        cmd.setCommandText("Insert into tbl(id, name) values (1,”Vinay”)"); 
+        cmd.setCommandText("Insert into tbl(id, name) values (2,”Kushal”)"); 
+        cmd.setCommandText("Insert into tbl(id, name) values (3,”Saransh”)"); 
+        cmd.Execute(); 
+  
+        // commit changes on success 
+        con.Commit(); 
+        printf("Table created, row inserted!\n"); 
+    } 
+  
+    catch(SAException &x) 
+    { 
+        // SAConnection::Rollback() 
+        // can also throw an exception 
+        // (if a network error for example), 
+        // we will be ready 
+        try
+        { 
+            // on error rollback changes 
+            con.Rollback(); 
+        } 
+        catch(SAException &) 
+        { 
+        } 
+        // print error message 
+  
+        printf("%s\n", (const char*)x.ErrText()); 
+    } 
+    return 0; 
+} 
